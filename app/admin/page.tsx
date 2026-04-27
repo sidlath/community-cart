@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { SOCIETY, STORE_PARTNER, CYCLE_LIVE, FLAT_ACTIVITY, TOP_CATEGORIES } from '@/lib/data';
 
 export default function AdminPage() {
@@ -21,20 +20,8 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen pb-12">
-      <div className="max-w-[1320px] mx-auto px-6 md:px-8 pt-8">
-        <div className="bg-[#1a1208] rounded-2xl p-3" style={{ boxShadow: '0 40px 80px -20px rgba(42, 24, 16, 0.3), 0 0 0 1px #3a2a1c' }}>
-          <div className="flex items-center gap-2 px-3 pb-3">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
-              <div className="w-3 h-3 rounded-full bg-[#FEBC2E]" />
-              <div className="w-3 h-3 rounded-full bg-[#28C840]" />
-            </div>
-            <div className="flex-1 bg-[#3a2a1c] rounded-md px-3 py-1 text-xs text-cream/70 font-mono text-center">
-              🔒 admin.communitycart.in/eldora-powai
-            </div>
-          </div>
-
-          <div className="bg-cream rounded-xl p-6 md:p-8 min-h-[800px]">
+      <div className="max-w-[1320px] mx-auto px-4 md:px-8 pt-6 md:pt-10">
+        <div className="bg-cream rounded-2xl p-5 md:p-8 min-h-[800px]">
             {/* Header */}
             <div className="flex justify-between items-start border-b border-ink pb-5 mb-6 flex-wrap gap-4">
               <div>
@@ -84,7 +71,6 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
-        </div>
 
         <div className="text-center mt-6 text-[10px] font-mono text-clay tracking-widest">
           DEMO MODE · ALL DATA IS SIMULATED · TAP ANYTHING — IT&apos;S CLICKABLE

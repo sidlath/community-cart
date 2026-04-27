@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { PRODUCTS, CATEGORIES, CYCLE_LIVE, SOCIETY, RESIDENT, ORDER_HISTORY } from '@/lib/data';
 
 type Tab = 'home' | 'catalog' | 'cart' | 'orders' | 'profile';
@@ -36,83 +35,35 @@ export default function AppPage() {
   const total = subtotal - discount;
 
   return (
-    <div className="min-h-screen bg-cream pb-32 pt-8 px-4">
-      <div className="max-w-[440px] mx-auto">
-        <div className="bg-cream rounded-[44px] p-3 relative" style={{ background: '#1a1208', boxShadow: 'inset 0 0 0 2px #3a2a1c, 0 30px 60px -20px rgba(42,24,16,0.3)' }}>
-          <div className="absolute top-[18px] left-1/2 -translate-x-1/2 w-[110px] h-7 bg-[#1a1208] rounded-2xl z-10" />
+    <div className="min-h-[calc(100vh-60px)] bg-cream relative">
+      {/* Soft framing on desktop only — on mobile this is the actual viewport */}
+      <div className="md:max-w-[480px] md:mx-auto md:my-6 md:rounded-3xl md:bg-white md:shadow-[0_30px_80px_-20px_rgba(42,24,16,0.18)] md:border md:border-sand md:overflow-hidden md:min-h-[800px] md:relative">
+        {/* Tab content */}
+        <div className="pb-24">
+          {tab === 'home' && <HomeTab societyFlats={societyFlats} setTab={setTab} updateCart={updateCart} cart={cart} />}
+          {tab === 'catalog' && <CatalogTab activeCategory={activeCategory} setActiveCategory={setActiveCategory} search={search} setSearch={setSearch} cart={cart} updateCart={updateCart} />}
+          {tab === 'cart' && <CartTab cartItems={cartItems} cart={cart} updateCart={updateCart} subtotal={subtotal} discount={discount} total={total} />}
+          {tab === 'orders' && <OrdersTab />}
+          {tab === 'profile' && <ProfileTab />}
+        </div>
 
-          <div className="bg-cream rounded-[32px] overflow-hidden relative" style={{ height: '720px' }}>
-            <div className="h-11 flex justify-between items-center px-6 pt-3.5 text-[13px] font-semibold text-ink">
-              <span>9:41</span>
-              <div className="flex items-center gap-1">
-                <SignalIcon />
-                <WifiIcon />
-                <BatteryIcon />
+        {/* Sticky cart bar — fixed at viewport bottom on mobile, absolute within container on desktop */}
+        {totalItems > 0 && tab !== 'cart' && (
+          <div className="fixed md:absolute bottom-[150px] md:bottom-[88px] left-4 right-4 md:left-3 md:right-3 max-w-[460px] mx-auto md:max-w-none bg-ink text-cream rounded-full px-4 py-3 flex items-center gap-3 cursor-pointer animate-slide-up shadow-[0_16px_40px_-10px_rgba(42,24,16,0.4)] z-40"
+               onClick={() => setTab('cart')}>
+            <div className="flex-1">
+              <div className="text-[9px] opacity-60 font-mono tracking-widest">
+                {totalItems} ITEMS · SAVING ₹{discount}
               </div>
+              <div className="font-display text-[15px] font-semibold">₹{total.toLocaleString('en-IN')}</div>
             </div>
-
-            <div className="h-[calc(100%-44px-72px)] overflow-y-auto hide-scrollbar relative">
-              {tab === 'home' && <HomeTab societyFlats={societyFlats} setTab={setTab} updateCart={updateCart} cart={cart} />}
-              {tab === 'catalog' && <CatalogTab activeCategory={activeCategory} setActiveCategory={setActiveCategory} search={search} setSearch={setSearch} cart={cart} updateCart={updateCart} />}
-              {tab === 'cart' && <CartTab cartItems={cartItems} cart={cart} updateCart={updateCart} subtotal={subtotal} discount={discount} total={total} />}
-              {tab === 'orders' && <OrdersTab />}
-              {tab === 'profile' && <ProfileTab />}
-            </div>
-
-            {/* Sticky cart bar */}
-            {totalItems > 0 && tab !== 'cart' && (
-              <div className="absolute bottom-[80px] left-3 right-3 bg-ink text-cream rounded-full px-4 py-3 flex items-center gap-3 cursor-pointer animate-slide-up"
-                   onClick={() => setTab('cart')}>
-                <div className="flex-1">
-                  <div className="text-[9px] opacity-60 font-mono tracking-widest">
-                    {totalItems} ITEMS · SAVING ₹{discount}
-                  </div>
-                  <div className="font-display text-[15px] font-semibold">₹{total.toLocaleString('en-IN')}</div>
-                </div>
-                <span className="bg-cream text-ink px-3 py-1.5 rounded-full text-[10px] font-bold">View cart →</span>
-              </div>
-            )}
-
-            {/* Bottom nav */}
-            <BottomNav tab={tab} setTab={setTab} cartCount={totalItems} />
+            <span className="bg-cream text-ink px-3 py-1.5 rounded-full text-[10px] font-bold">View cart →</span>
           </div>
-        </div>
+        )}
 
-        <div className="text-center mt-5 text-[10px] font-mono text-clay tracking-widest">
-          <p className="mb-1">DEMO MODE · ALL DATA IS SIMULATED</p>
-          <p>TAP ANYTHING — IT&apos;S ALL CLICKABLE</p>
-        </div>
+        {/* Bottom nav — fixed at viewport bottom on mobile, absolute within container on desktop */}
+        <BottomNav tab={tab} setTab={setTab} cartCount={totalItems} />
       </div>
-    </div>
-  );
-}
-
-/* ICONS */
-function SignalIcon() {
-  return (
-    <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor">
-      <rect x="0" y="6" width="3" height="5" rx="0.5" />
-      <rect x="4" y="4" width="3" height="7" rx="0.5" />
-      <rect x="8" y="2" width="3" height="9" rx="0.5" />
-      <rect x="12" y="0" width="3" height="11" rx="0.5" />
-    </svg>
-  );
-}
-
-function WifiIcon() {
-  return (
-    <svg width="14" height="11" viewBox="0 0 16 11" fill="currentColor" className="ml-0.5">
-      <path d="M8 1.5C5.5 1.5 3.2 2.4 1.4 3.9L0 2.5C2.2 0.7 5 0 8 0s5.8 0.7 8 2.5L14.6 3.9C12.8 2.4 10.5 1.5 8 1.5z" />
-      <path d="M8 4.5C6.5 4.5 5 5 3.8 5.8L2.4 4.4C4 3.2 6 2.5 8 2.5s4 0.7 5.6 1.9L12.2 5.8C11 5 9.5 4.5 8 4.5z" />
-      <circle cx="8" cy="9.5" r="1.5" />
-    </svg>
-  );
-}
-
-function BatteryIcon() {
-  return (
-    <div className="w-6 h-[11px] border-[1.5px] border-current rounded-[3px] relative ml-0.5">
-      <div className="absolute inset-0.5 bg-current rounded-[1px]" style={{ width: '85%' }} />
     </div>
   );
 }
@@ -494,14 +445,14 @@ function BottomNav({ tab, setTab, cartCount }: { tab: Tab; setTab: (t: Tab) => v
   ];
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 h-[72px] bg-cream border-t border-sand flex items-center justify-around px-2">
+    <div className="fixed md:absolute bottom-0 left-0 right-0 max-w-[480px] mx-auto h-[88px] md:h-[72px] bg-cream/95 backdrop-blur-md border-t border-sand flex items-center justify-around px-2 pb-4 md:pb-0 z-30">
       {items.map(item => (
         <button
           key={item.id}
           onClick={() => setTab(item.id)}
           className={`flex flex-col items-center gap-0.5 px-2 py-1 relative ${tab === item.id ? 'text-terra' : 'text-clay'}`}
         >
-          <span className="text-lg">{item.icon}</span>
+          <span className="text-xl md:text-lg">{item.icon}</span>
           <span className={`text-[9px] font-mono tracking-wider font-semibold ${tab === item.id ? 'text-terra' : 'text-clay'}`}>
             {item.label.toUpperCase()}
           </span>
