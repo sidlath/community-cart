@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { PRODUCTS, CATEGORIES, CYCLE_LIVE, SOCIETY, RESIDENT, ORDER_HISTORY } from '@/lib/data';
+import CutoffTimer from '@/components/CutoffTimer';
+import PaymentModal from '@/components/PaymentModal';
 
 type Tab = 'home' | 'catalog' | 'cart' | 'orders' | 'profile';
 
@@ -11,6 +13,8 @@ export default function AppPage() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [search, setSearch] = useState('');
   const [societyFlats, setSocietyFlats] = useState(CYCLE_LIVE.flatsJoined);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [justPaid, setJustPaid] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -34,42 +38,176 @@ export default function AppPage() {
   const discount = Math.round(subtotal * (CYCLE_LIVE.currentDiscount / 100));
   const total = subtotal - discount;
 
+  const handlePaymentSuccess = () => {
+    setCart({});
+    setJustPaid(true);
+    setTab('orders');
+    setTimeout(() => setJustPaid(false), 4000);
+  };
+
   return (
     <div className="min-h-[calc(100vh-60px)] bg-cream relative">
-      {/* Soft framing on desktop only — on mobile this is the actual viewport */}
-      <div className="md:max-w-[480px] md:mx-auto md:my-6 md:rounded-3xl md:bg-white md:shadow-[0_30px_80px_-20px_rgba(42,24,16,0.18)] md:border md:border-sand md:overflow-hidden md:min-h-[800px] md:relative">
-        {/* Tab content */}
-        <div className="pb-24">
-          {tab === 'home' && <HomeTab societyFlats={societyFlats} setTab={setTab} updateCart={updateCart} cart={cart} />}
-          {tab === 'catalog' && <CatalogTab activeCategory={activeCategory} setActiveCategory={setActiveCategory} search={search} setSearch={setSearch} cart={cart} updateCart={updateCart} />}
-          {tab === 'cart' && <CartTab cartItems={cartItems} cart={cart} updateCart={updateCart} subtotal={subtotal} discount={discount} total={total} />}
-          {tab === 'orders' && <OrdersTab />}
-          {tab === 'profile' && <ProfileTab />}
+      {/* Desktop context layout: side panels frame the app on large screens */}
+      <div className="lg:grid lg:grid-cols-[1fr_480px_1fr] lg:gap-8 lg:max-w-[1320px] lg:mx-auto lg:px-8 lg:py-8">
+        {/* Left context panel — desktop only */}
+        <DesktopLeftPanel />
+
+        {/* The app itself */}
+        <div className="md:max-w-[480px] md:mx-auto md:my-6 lg:my-0 md:rounded-3xl md:bg-white md:shadow-[0_30px_80px_-20px_rgba(42,24,16,0.18)] md:border md:border-sand md:overflow-hidden md:min-h-[820px] md:relative">
+          <div className="pb-24">
+            {tab === 'home' && <HomeTab societyFlats={societyFlats} setTab={setTab} updateCart={updateCart} cart={cart} justPaid={justPaid} />}
+            {tab === 'catalog' && <CatalogTab activeCategory={activeCategory} setActiveCategory={setActiveCategory} search={search} setSearch={setSearch} cart={cart} updateCart={updateCart} />}
+            {tab === 'cart' && <CartTab cartItems={cartItems} cart={cart} updateCart={updateCart} subtotal={subtotal} discount={discount} total={total} onPay={() => setPaymentOpen(true)} />}
+            {tab === 'orders' && <OrdersTab justPaid={justPaid} />}
+            {tab === 'profile' && <ProfileTab />}
+          </div>
+
+          {/* Sticky cart bar */}
+          {totalItems > 0 && tab !== 'cart' && (
+            <div className="fixed md:absolute bottom-[150px] md:bottom-[88px] left-4 right-4 md:left-3 md:right-3 max-w-[460px] mx-auto md:max-w-none bg-ink text-cream rounded-full px-4 py-3 flex items-center gap-3 cursor-pointer animate-slide-up shadow-[0_16px_40px_-10px_rgba(42,24,16,0.4)] z-40"
+                 onClick={() => setTab('cart')}>
+              <div className="flex-1">
+                <div className="text-[9px] opacity-60 font-mono tracking-widest">
+                  {totalItems} ITEMS · SAVING ₹{discount}
+                </div>
+                <div className="font-display text-[15px] font-semibold">₹{total.toLocaleString('en-IN')}</div>
+              </div>
+              <span className="bg-cream text-ink px-3 py-1.5 rounded-full text-[10px] font-bold">View cart →</span>
+            </div>
+          )}
+
+          <BottomNav tab={tab} setTab={setTab} cartCount={totalItems} />
         </div>
 
-        {/* Sticky cart bar — fixed at viewport bottom on mobile, absolute within container on desktop */}
-        {totalItems > 0 && tab !== 'cart' && (
-          <div className="fixed md:absolute bottom-[150px] md:bottom-[88px] left-4 right-4 md:left-3 md:right-3 max-w-[460px] mx-auto md:max-w-none bg-ink text-cream rounded-full px-4 py-3 flex items-center gap-3 cursor-pointer animate-slide-up shadow-[0_16px_40px_-10px_rgba(42,24,16,0.4)] z-40"
-               onClick={() => setTab('cart')}>
-            <div className="flex-1">
-              <div className="text-[9px] opacity-60 font-mono tracking-widest">
-                {totalItems} ITEMS · SAVING ₹{discount}
-              </div>
-              <div className="font-display text-[15px] font-semibold">₹{total.toLocaleString('en-IN')}</div>
-            </div>
-            <span className="bg-cream text-ink px-3 py-1.5 rounded-full text-[10px] font-bold">View cart →</span>
-          </div>
-        )}
-
-        {/* Bottom nav — fixed at viewport bottom on mobile, absolute within container on desktop */}
-        <BottomNav tab={tab} setTab={setTab} cartCount={totalItems} />
+        {/* Right context panel — desktop only */}
+        <DesktopRightPanel societyFlats={societyFlats} />
       </div>
+
+      <PaymentModal
+        open={paymentOpen}
+        total={total}
+        itemCount={totalItems}
+        onClose={() => setPaymentOpen(false)}
+        onSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 }
 
+/* DESKTOP LEFT PANEL — context for desktop viewers */
+function DesktopLeftPanel() {
+  return (
+    <aside className="hidden lg:flex flex-col gap-6 sticky top-24 h-fit">
+      <div>
+        <div className="font-mono text-[10px] text-terra tracking-widest font-semibold mb-2">
+          THE RESIDENT VIEW
+        </div>
+        <h3 className="font-display text-[28px] font-medium tracking-tight leading-[1.1]">
+          You&apos;re <em className="italic text-terra font-light">Priya Menon</em>, flat A-407.
+        </h3>
+        <p className="text-sm text-ink-soft mt-3 leading-relaxed">
+          This is what residents see in their app each week. Everything you tap is real — add to cart, change tabs, search, filter.
+        </p>
+      </div>
+
+      <div className="bg-white border border-sand rounded-2xl p-4">
+        <div className="font-mono text-[10px] text-clay tracking-widest font-semibold mb-2.5">
+          TRY THIS
+        </div>
+        <ul className="space-y-2.5 text-[13px] text-ink-soft leading-snug">
+          <li className="flex gap-2">
+            <span className="text-terra font-bold">01</span>
+            <span>Browse the catalog tab — search for &ldquo;atta&rdquo;</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-terra font-bold">02</span>
+            <span>Add items, watch the cart bar update</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-terra font-bold">03</span>
+            <span>Open Cart, tap &ldquo;Pay via UPI&rdquo;</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-terra font-bold">04</span>
+            <span>See your bag label for Wednesday pickup</span>
+          </li>
+        </ul>
+      </div>
+
+      <div className="bg-cream-light border border-sand rounded-2xl p-4">
+        <div className="text-[11px] text-clay leading-relaxed">
+          <span className="font-semibold text-ink">Demo data.</span> No real payments are processed. The society, residents, and orders are all simulated for the pitch.
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+/* DESKTOP RIGHT PANEL — live society pulse */
+function DesktopRightPanel({ societyFlats }: { societyFlats: number }) {
+  const tierPercent = Math.min((societyFlats / SOCIETY.totalFlats) * 100, 100);
+
+  return (
+    <aside className="hidden lg:flex flex-col gap-4 sticky top-24 h-fit">
+      <div className="bg-ink text-cream rounded-2xl p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="w-1.5 h-1.5 rounded-full bg-leaf-light animate-pulse-dot" />
+          <span className="font-mono text-[10px] text-leaf-light tracking-widest font-bold">
+            LIVE · CYCLE {SOCIETY.cycleNumber}
+          </span>
+        </div>
+
+        <div className="font-display text-[44px] font-semibold tracking-tight leading-none animate-count-bump" key={societyFlats}>
+          {societyFlats}
+        </div>
+        <div className="text-[11px] opacity-60 font-mono tracking-wider mt-1.5">
+          OF {SOCIETY.totalFlats} FLATS · {Math.round(tierPercent)}%
+        </div>
+
+        <div className="mt-4 h-1.5 bg-cream/15 rounded-full overflow-hidden">
+          <div className="progress-fill h-full" style={{ width: `${tierPercent}%` }} />
+        </div>
+        <div className="flex justify-between text-[9px] font-mono opacity-50 tracking-wider mt-2">
+          <span>8%</span><span>11%</span><span className="text-leaf-light">14%</span><span>17%</span>
+        </div>
+
+        <div className="mt-5 pt-4 border-t border-cream/15">
+          <div className="text-[10px] opacity-60 font-mono tracking-widest mb-1">CUTOFF</div>
+          <div className="font-display text-lg font-medium">
+            <CutoffTimer variant="large" />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border border-sand rounded-2xl p-5">
+        <div className="text-[10px] text-clay font-mono tracking-widest font-semibold mb-2">
+          THIS CYCLE
+        </div>
+        <div className="space-y-2.5 text-[13px]">
+          <div className="flex justify-between">
+            <span className="text-clay">Basket value</span>
+            <span className="font-semibold">₹{(CYCLE_LIVE.basketValue / 100000).toFixed(2)}L</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-clay">Bulk discount</span>
+            <span className="font-semibold text-leaf">{CYCLE_LIVE.currentDiscount}%</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-clay">Delivery</span>
+            <span className="font-semibold">{SOCIETY.deliveryDay}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-clay">Pickup</span>
+            <span className="font-semibold">{SOCIETY.deliveryGate}</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 /* HOME TAB */
-function HomeTab({ societyFlats, setTab, updateCart, cart }: any) {
+function HomeTab({ societyFlats, setTab, updateCart, cart, justPaid }: any) {
   const tierPercent = Math.min((societyFlats / SOCIETY.totalFlats) * 100, 100);
   const popularPicks = PRODUCTS.filter(p => p.popular);
 
@@ -97,7 +235,7 @@ function HomeTab({ societyFlats, setTab, updateCart, cart }: any) {
               CYCLE Nº {SOCIETY.cycleNumber} · WEEK {SOCIETY.cycleDate}
             </div>
             <div className="font-display text-lg font-medium mt-1">
-              Cutoff in {SOCIETY.cutoffHours}h {SOCIETY.cutoffMinutes}m
+              <CutoffTimer />
             </div>
           </div>
           <div className="flex items-center gap-1.5">
@@ -271,7 +409,7 @@ function ProductCard({ product, cart, updateCart }: any) {
 }
 
 /* CART TAB */
-function CartTab({ cartItems, cart, updateCart, subtotal, discount, total }: any) {
+function CartTab({ cartItems, cart, updateCart, subtotal, discount, total, onPay }: any) {
   if (cartItems.length === 0) {
     return (
       <div className="px-5 pt-12 text-center">
@@ -332,7 +470,7 @@ function CartTab({ cartItems, cart, updateCart, subtotal, discount, total }: any
         </div>
       </div>
 
-      <button className="w-full mt-3 py-4 bg-ink text-cream rounded-xl text-sm font-bold tracking-wide hover:bg-terra transition-colors">
+      <button onClick={onPay} className="w-full mt-3 py-4 bg-ink text-cream rounded-xl text-sm font-bold tracking-wide hover:bg-terra transition-colors">
         Pay ₹{total.toLocaleString('en-IN')} via UPI →
       </button>
       <p className="text-[10px] text-clay text-center mt-2 font-mono tracking-wide">
@@ -343,11 +481,58 @@ function CartTab({ cartItems, cart, updateCart, subtotal, discount, total }: any
 }
 
 /* ORDERS TAB */
-function OrdersTab() {
+function OrdersTab({ justPaid }: any) {
   return (
     <div className="px-5 pt-3 pb-4">
       <h2 className="font-display text-2xl font-medium tracking-tight mb-1">Your orders</h2>
-      <p className="text-xs text-ink-soft mb-5">11 cycles · ₹{RESIDENT.totalSaved.toLocaleString('en-IN')} saved total</p>
+      <p className="text-xs text-ink-soft mb-5">12 cycles · ₹{(RESIDENT.totalSaved + 467).toLocaleString('en-IN')} saved total</p>
+
+      {justPaid && (
+        <div className="bg-leaf/10 border border-leaf/30 rounded-xl p-4 mb-3 animate-slide-up">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-base">✓</span>
+            <span className="font-mono text-[10px] text-leaf tracking-widest font-bold">
+              JUST CONFIRMED · CYCLE {SOCIETY.cycleNumber}
+            </span>
+          </div>
+          <div className="font-display text-lg font-semibold leading-snug">
+            Bag will be ready at {SOCIETY.deliveryGate} on {SOCIETY.deliveryDay}.
+          </div>
+          <p className="text-[12px] text-ink-soft mt-1.5">
+            We&apos;ll WhatsApp you when the consolidated delivery arrives at the society.
+          </p>
+        </div>
+      )}
+
+      {/* Just-paid order card */}
+      {justPaid && (
+        <div className="bg-white border-2 border-leaf rounded-xl p-4 mb-3">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <div className="text-[9px] text-leaf font-mono tracking-widest font-semibold">
+                CYCLE Nº {SOCIETY.cycleNumber} · {SOCIETY.cycleDate}
+              </div>
+              <div className="font-display text-base font-semibold mt-1">8 items confirmed</div>
+            </div>
+            <span className="px-2.5 py-1 rounded-full text-[9px] font-bold bg-terra/10 text-terra tracking-wider uppercase">
+              Awaiting delivery
+            </span>
+          </div>
+          <div className="flex justify-between items-center mt-3 pt-3 border-t border-sand">
+            <div>
+              <div className="text-[9px] text-clay font-mono tracking-widest">PAID</div>
+              <div className="font-display text-base font-semibold">₹1,386</div>
+            </div>
+            <div>
+              <div className="text-[9px] text-clay font-mono tracking-widest">SAVED</div>
+              <div className="font-display text-base font-semibold text-leaf">₹467</div>
+            </div>
+            <button className="px-3 py-2 bg-ink text-cream rounded-full text-[10px] font-bold">
+              View label
+            </button>
+          </div>
+        </div>
+      )}
 
       {ORDER_HISTORY.map(o => (
         <div key={o.cycle} className="bg-white border border-sand rounded-xl p-4 mb-3">

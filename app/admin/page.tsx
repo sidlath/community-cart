@@ -2,10 +2,24 @@
 
 import { useEffect, useState } from 'react';
 import { SOCIETY, STORE_PARTNER, CYCLE_LIVE, FLAT_ACTIVITY, TOP_CATEGORIES } from '@/lib/data';
+import CutoffTimer from '@/components/CutoffTimer';
+import WhatsAppModal from '@/components/WhatsAppModal';
+
+const SIMULATED_NAMES = [
+  { name: 'Riya Kapoor', flat: 'A-815', initial: 'R' },
+  { name: 'Devansh Mehta', flat: 'B-410', initial: 'D' },
+  { name: 'Tanvi Rao', flat: 'C-619', initial: 'T' },
+  { name: 'Harish Pillai', flat: 'D-205', initial: 'H' },
+  { name: 'Shreya Kulkarni', flat: 'A-302', initial: 'S' },
+  { name: 'Nikhil Bhatia', flat: 'B-712', initial: 'N' },
+  { name: 'Ishaan Verma', flat: 'C-108', initial: 'I' },
+];
 
 export default function AdminPage() {
   const [societyFlats, setSocietyFlats] = useState(CYCLE_LIVE.flatsJoined);
   const [filter, setFilter] = useState<'all' | 'paid' | 'pending'>('all');
+  const [whatsappOpen, setWhatsappOpen] = useState(false);
+  const [extraOrders, setExtraOrders] = useState<typeof FLAT_ACTIVITY>([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -14,9 +28,46 @@ export default function AdminPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSimulateOrder = () => {
+    const used = new Set([...FLAT_ACTIVITY, ...extraOrders].map(f => f.flat));
+    const available = SIMULATED_NAMES.filter(n => !used.has(n.flat));
+    if (available.length === 0) return;
+    const pick = available[Math.floor(Math.random() * available.length)];
+    const amounts = [620, 880, 1140, 1380, 1620, 920, 760, 1480];
+    const items = [4, 5, 6, 7, 8, 9, 10, 11];
+    const newOrder = {
+      flat: pick.flat,
+      name: pick.name,
+      amount: amounts[Math.floor(Math.random() * amounts.length)],
+      status: Math.random() > 0.4 ? 'paid' : 'pending',
+      items: items[Math.floor(Math.random() * items.length)],
+      time: 'just now',
+      initial: pick.initial,
+    };
+    setExtraOrders(prev => [newOrder, ...prev]);
+    setSocietyFlats(prev => Math.min(prev + 1, 412));
+  };
+
+  const handleWhatsAppSent = () => {
+    // Simulate the bump from sending nudges
+    let count = 0;
+    const burst = setInterval(() => {
+      setSocietyFlats(prev => {
+        if (count >= 12 || prev >= 310) {
+          clearInterval(burst);
+          return prev;
+        }
+        count++;
+        return Math.min(prev + 1, 310);
+      });
+    }, 250);
+  };
+
+  const allActivity = [...extraOrders, ...FLAT_ACTIVITY];
   const participation = Math.round((societyFlats / SOCIETY.totalFlats) * 100);
   const basketValue = societyFlats * 1124;
-  const filteredActivity = filter === 'all' ? FLAT_ACTIVITY : FLAT_ACTIVITY.filter(f => f.status === filter);
+  const filteredActivity = filter === 'all' ? allActivity : allActivity.filter(f => f.status === filter);
+  const pendingCount = SOCIETY.totalFlats - societyFlats;
 
   return (
     <div className="min-h-screen pb-12">
@@ -38,7 +89,7 @@ export default function AdminPage() {
                   Welcome back, <em className="italic text-terra font-normal">Mr. Iyer</em>.
                 </h1>
                 <p className="text-sm text-ink-soft mt-2">
-                  Cycle closes in {SOCIETY.cutoffHours}h {SOCIETY.cutoffMinutes}m. {societyFlats} of {SOCIETY.totalFlats} flats have ordered.
+                  Cycle closes in <CutoffTimer />. {societyFlats} of {SOCIETY.totalFlats} flats have ordered.
                 </p>
               </div>
               <div className="flex gap-2.5 flex-wrap">
@@ -62,11 +113,11 @@ export default function AdminPage() {
 
             {/* Two columns */}
             <div className="grid md:grid-cols-[1.4fr_1fr] gap-4">
-              <ActivityTable activity={filteredActivity} filter={filter} setFilter={setFilter} />
+              <ActivityTable activity={filteredActivity} filter={filter} setFilter={setFilter} onSimulate={handleSimulateOrder} totalCount={allActivity.length} />
 
               <div className="space-y-3">
                 <CategoriesCard />
-                <ActionCard />
+                <ActionCard pendingCount={pendingCount} onSendNudge={() => setWhatsappOpen(true)} />
                 <StorePartnerCard />
               </div>
             </div>
@@ -76,6 +127,13 @@ export default function AdminPage() {
           DEMO MODE · ALL DATA IS SIMULATED · TAP ANYTHING — IT&apos;S CLICKABLE
         </div>
       </div>
+
+      <WhatsAppModal
+        open={whatsappOpen}
+        pendingFlats={pendingCount}
+        onClose={() => setWhatsappOpen(false)}
+        onSent={handleWhatsAppSent}
+      />
     </div>
   );
 }
@@ -95,7 +153,7 @@ function KPI({ label, value, sub, color, trend }: any) {
   );
 }
 
-function ActivityTable({ activity, filter, setFilter }: any) {
+function ActivityTable({ activity, filter, setFilter, onSimulate, totalCount }: any) {
   return (
     <div className="bg-white border border-sand rounded-2xl p-5">
       <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
@@ -144,8 +202,11 @@ function ActivityTable({ activity, filter, setFilter }: any) {
         </div>
       ))}
 
-      <div className="mt-4 text-[11px] text-clay text-center font-mono tracking-wide">
-        Showing {activity.length} of {CYCLE_LIVE.flatsJoined} · <span className="text-terra font-bold cursor-pointer">VIEW ALL →</span>
+      <div className="mt-4 flex justify-between items-center text-[11px] text-clay font-mono tracking-wide">
+        <span>Showing {activity.length} of {totalCount}</span>
+        <button onClick={onSimulate} className="text-terra font-bold cursor-pointer hover:text-ink transition-colors">
+          + SIMULATE NEW ORDER
+        </button>
       </div>
     </div>
   );
@@ -175,19 +236,19 @@ function CategoriesCard() {
   );
 }
 
-function ActionCard() {
+function ActionCard({ pendingCount, onSendNudge }: any) {
   return (
     <div className="bg-ink text-cream rounded-2xl p-5">
       <div className="text-[10px] font-mono opacity-60 tracking-widest font-semibold">
         ACTION REQUIRED
       </div>
       <div className="font-display text-lg font-medium mt-1.5 leading-snug tracking-tight">
-        165 flats haven&apos;t ordered yet.
+        {pendingCount} flats haven&apos;t ordered yet.
       </div>
       <p className="text-xs opacity-70 leading-relaxed mt-1.5">
         Sending a WhatsApp nudge could push you past the 75% participation tier — that&apos;s another 3% off for everyone.
       </p>
-      <button className="bg-cream text-ink rounded-full px-4 py-2 text-[11px] font-bold tracking-wide mt-3 hover:bg-terra hover:text-cream transition-colors">
+      <button onClick={onSendNudge} className="bg-cream text-ink rounded-full px-4 py-2 text-[11px] font-bold tracking-wide mt-3 hover:bg-terra hover:text-cream transition-colors">
         Send WhatsApp reminder →
       </button>
     </div>

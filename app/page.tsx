@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { SOCIETY, RESIDENT, CYCLE_LIVE } from '@/lib/data';
 import { useEffect, useState } from 'react';
+import CutoffTimer from '@/components/CutoffTimer';
 
 export default function LandingPage() {
   const [societyFlats, setSocietyFlats] = useState(CYCLE_LIVE.flatsJoined);
@@ -150,7 +151,7 @@ export default function LandingPage() {
               Cycle Nº {SOCIETY.cycleNumber} · {SOCIETY.cycleDate}
             </div>
             <div className="text-sm text-ink-soft mt-1">
-              Cutoff in {SOCIETY.cutoffHours}h {SOCIETY.cutoffMinutes}m · Delivery {SOCIETY.deliveryDay}
+              <CutoffTimer /> · Delivery {SOCIETY.deliveryDay}
             </div>
           </div>
 
