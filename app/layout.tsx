@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import RoleSwitcher from '@/components/RoleSwitcher';
+import MinimalNav from '@/components/MinimalNav';
 
 export const metadata: Metadata = {
-  title: 'Community Cart — Save Together, Shop Smarter',
-  description: 'India\'s first weekly bulk grocery ordering club for apartment communities. One catalog. One delivery. Everyone saves.',
+  title: 'Community Cart — Mumbai pilot demo',
+  description: 'Weekly bulk grocery ordering for Hiranandani Eldora, Powai. Live demo.',
 };
 
 export default function RootLayout({
@@ -15,10 +15,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-cream text-ink antialiased">
-        <Navbar />
-        <main className="relative">{children}</main>
-        <Footer />
+      <body className="bg-cream text-ink antialiased min-h-screen">
+        <MinimalNav />
+        <main className="relative pb-24">{children}</main>
+        <RoleSwitcher />
       </body>
     </html>
   );

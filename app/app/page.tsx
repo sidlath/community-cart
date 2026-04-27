@@ -38,12 +38,6 @@ export default function AppPage() {
   return (
     <div className="min-h-screen bg-cream pb-32 pt-8 px-4">
       <div className="max-w-[440px] mx-auto">
-        <div className="text-center mb-3">
-          <Link href="/" className="text-[10px] font-mono text-clay tracking-widest hover:text-ink underline-link">
-            ← BACK TO COMMUNITY CART
-          </Link>
-        </div>
-
         <div className="bg-cream rounded-[44px] p-3 relative" style={{ background: '#1a1208', boxShadow: 'inset 0 0 0 2px #3a2a1c, 0 30px 60px -20px rgba(42,24,16,0.3)' }}>
           <div className="absolute top-[18px] left-1/2 -translate-x-1/2 w-[110px] h-7 bg-[#1a1208] rounded-2xl z-10" />
 

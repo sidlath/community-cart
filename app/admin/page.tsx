@@ -22,12 +22,6 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen pb-12">
       <div className="max-w-[1320px] mx-auto px-6 md:px-8 pt-8">
-        <div className="text-center mb-6">
-          <Link href="/" className="text-[10px] font-mono text-clay tracking-widest hover:text-ink underline-link">
-            ← BACK TO COMMUNITY CART
-          </Link>
-        </div>
-
         <div className="bg-[#1a1208] rounded-2xl p-3" style={{ boxShadow: '0 40px 80px -20px rgba(42, 24, 16, 0.3), 0 0 0 1px #3a2a1c' }}>
           <div className="flex items-center gap-2 px-3 pb-3">
             <div className="flex gap-1.5">
