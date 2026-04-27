@@ -167,6 +167,33 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
+
+        {/* How it works strip */}
+        <div className="mt-16 md:mt-20 pt-10 border-t border-ink/10">
+          <div className="text-center mb-8">
+            <div className="font-mono text-[10px] text-terra tracking-widest font-semibold mb-2">
+              HOW IT WORKS
+            </div>
+            <h2 className="font-display text-2xl md:text-4xl font-medium tracking-tight">
+              Four steps. <em className="italic text-terra font-light">Once a week.</em>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {[
+              { n: '01', title: 'Browse', body: 'A weekly catalog of 50–70 staples drops every Sunday. Tap to add.' },
+              { n: '02', title: 'Society fills', body: 'Your neighbours order in real-time. Each new flat unlocks a deeper discount.' },
+              { n: '03', title: 'Pay your share', body: 'Auto-split bill via UPI. You only pay for what you ordered.' },
+              { n: '04', title: 'Pickup at gate', body: 'Wednesday morning, one delivery for the whole society. Each bag labelled.' },
+            ].map(s => (
+              <div key={s.n} className="bg-white border border-sand rounded-2xl p-4 md:p-5">
+                <div className="font-mono text-xs text-terra font-bold tracking-widest mb-3">{s.n}</div>
+                <div className="font-display text-base md:text-lg font-medium tracking-tight mb-1.5">{s.title}</div>
+                <p className="text-[12px] md:text-[13px] text-ink-soft leading-relaxed">{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

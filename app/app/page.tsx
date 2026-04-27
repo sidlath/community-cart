@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { PRODUCTS, CATEGORIES, CYCLE_LIVE, SOCIETY, RESIDENT, ORDER_HISTORY } from '@/lib/data';
 import CutoffTimer from '@/components/CutoffTimer';
 import PaymentModal from '@/components/PaymentModal';
+import ProvisionsModal from '@/components/ProvisionsModal';
 
 type Tab = 'home' | 'catalog' | 'cart' | 'orders' | 'profile';
 
@@ -64,7 +65,7 @@ export default function AppPage() {
 
           {/* Sticky cart bar */}
           {totalItems > 0 && tab !== 'cart' && (
-            <div className="fixed md:absolute bottom-[150px] md:bottom-[88px] left-4 right-4 md:left-3 md:right-3 max-w-[460px] mx-auto md:max-w-none bg-ink text-cream rounded-full px-4 py-3 flex items-center gap-3 cursor-pointer animate-slide-up shadow-[0_16px_40px_-10px_rgba(42,24,16,0.4)] z-40"
+            <div className="fixed md:absolute bottom-[128px] md:bottom-[88px] left-4 right-4 md:left-3 md:right-3 max-w-[460px] mx-auto md:max-w-none bg-ink text-cream rounded-full px-4 py-3 flex items-center gap-3 cursor-pointer animate-slide-up shadow-[0_16px_40px_-10px_rgba(42,24,16,0.4)] z-40"
                  onClick={() => setTab('cart')}>
               <div className="flex-1">
                 <div className="text-[9px] opacity-60 font-mono tracking-widest">
@@ -568,6 +569,8 @@ function OrdersTab({ justPaid }: any) {
 
 /* PROFILE TAB */
 function ProfileTab() {
+  const [provisionsOpen, setProvisionsOpen] = useState(false);
+
   return (
     <div className="px-5 pt-3 pb-4">
       <div className="text-center mb-6">
@@ -589,13 +592,29 @@ function ProfileTab() {
         <div className="text-[10px] opacity-60 mt-2">Across {RESIDENT.cyclesParticipated} cycles since {RESIDENT.joinedDate}</div>
       </div>
 
+      {/* Featured: AI Provisions Generator */}
+      <button onClick={() => setProvisionsOpen(true)} className="w-full bg-cream-light border-2 border-terra/30 rounded-2xl p-4 flex items-center gap-3 mb-4 text-left hover:border-terra transition-colors group">
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+             style={{ background: 'linear-gradient(135deg, #E8743C, #C73A1F)' }}>
+          ✨
+        </div>
+        <div className="flex-1">
+          <div className="font-mono text-[9px] text-terra tracking-widest font-bold mb-0.5">
+            AI · NEW
+          </div>
+          <div className="font-display text-base font-semibold leading-tight">Generate a starter pantry</div>
+          <div className="text-[11px] text-ink-soft mt-0.5">For new flats or guests staying over</div>
+        </div>
+        <span className="text-terra group-hover:translate-x-1 transition-transform">›</span>
+      </button>
+
       <div className="space-y-2">
         {[
           { icon: '🏠', label: 'Society details', sub: SOCIETY.name },
           { icon: '💳', label: 'Payment methods', sub: 'UPI · ****@ybl' },
           { icon: '🔔', label: 'Notifications', sub: 'Cycle reminders, deliveries' },
           { icon: '🎁', label: 'Refer a neighbour', sub: 'Get ₹100 in your next cycle' },
-          { icon: '❓', label: 'Help &amp; support', sub: 'FAQs, contact us' },
+          { icon: '❓', label: 'Help & support', sub: 'FAQs, contact us' },
           { icon: '⚙️', label: 'Settings', sub: 'Preferences, privacy' },
         ].map((item, i) => (
           <div key={i} className="bg-white border border-sand rounded-xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-ink transition-colors">
@@ -615,6 +634,8 @@ function ProfileTab() {
       <button className="w-full mt-5 py-3 border border-ink/30 text-ink-soft rounded-xl text-sm font-semibold hover:border-ink hover:text-ink transition-colors">
         Sign out
       </button>
+
+      <ProvisionsModal open={provisionsOpen} onClose={() => setProvisionsOpen(false)} />
     </div>
   );
 }
@@ -630,24 +651,33 @@ function BottomNav({ tab, setTab, cartCount }: { tab: Tab; setTab: (t: Tab) => v
   ];
 
   return (
-    <div className="fixed md:absolute bottom-0 left-0 right-0 max-w-[480px] mx-auto h-[88px] md:h-[72px] bg-cream/95 backdrop-blur-md border-t border-sand flex items-center justify-around px-2 pb-4 md:pb-0 z-30">
-      {items.map(item => (
-        <button
-          key={item.id}
-          onClick={() => setTab(item.id)}
-          className={`flex flex-col items-center gap-0.5 px-2 py-1 relative ${tab === item.id ? 'text-terra' : 'text-clay'}`}
-        >
-          <span className="text-xl md:text-lg">{item.icon}</span>
-          <span className={`text-[9px] font-mono tracking-wider font-semibold ${tab === item.id ? 'text-terra' : 'text-clay'}`}>
-            {item.label.toUpperCase()}
-          </span>
-          {item.id === 'cart' && cartCount > 0 && (
-            <span className="absolute top-0 right-1 w-4 h-4 bg-terra text-cream rounded-full text-[8px] font-bold flex items-center justify-center">
-              {cartCount}
+    <>
+      {/* Mobile-only thin strip for switching to admin view */}
+      <a href="/admin" className="md:hidden fixed bottom-[88px] left-0 right-0 h-7 max-w-[480px] mx-auto bg-ink text-cream flex items-center justify-center gap-2 text-[10px] font-mono tracking-widest font-semibold z-30">
+        <span className="opacity-60">VIEWING AS RESIDENT</span>
+        <span className="opacity-40">·</span>
+        <span className="text-terra-light">SWITCH TO RWA ADMIN →</span>
+      </a>
+
+      <div className="fixed md:absolute bottom-0 left-0 right-0 max-w-[480px] mx-auto h-[88px] md:h-[72px] bg-cream/95 backdrop-blur-md border-t border-sand flex items-center justify-around px-2 pb-4 md:pb-0 z-30">
+        {items.map(item => (
+          <button
+            key={item.id}
+            onClick={() => setTab(item.id)}
+            className={`flex flex-col items-center gap-0.5 px-2 py-1 relative ${tab === item.id ? 'text-terra' : 'text-clay'}`}
+          >
+            <span className="text-xl md:text-lg">{item.icon}</span>
+            <span className={`text-[9px] font-mono tracking-wider font-semibold ${tab === item.id ? 'text-terra' : 'text-clay'}`}>
+              {item.label.toUpperCase()}
             </span>
-          )}
-        </button>
-      ))}
-    </div>
+            {item.id === 'cart' && cartCount > 0 && (
+              <span className="absolute top-0 right-1 w-4 h-4 bg-terra text-cream rounded-full text-[8px] font-bold flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    </>
   );
 }

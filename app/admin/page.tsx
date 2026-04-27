@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { SOCIETY, STORE_PARTNER, CYCLE_LIVE, FLAT_ACTIVITY, TOP_CATEGORIES } from '@/lib/data';
 import CutoffTimer from '@/components/CutoffTimer';
 import WhatsAppModal from '@/components/WhatsAppModal';
+import SendOrderModal from '@/components/SendOrderModal';
 
 const SIMULATED_NAMES = [
   { name: 'Riya Kapoor', flat: 'A-815', initial: 'R' },
@@ -19,6 +20,8 @@ export default function AdminPage() {
   const [societyFlats, setSocietyFlats] = useState(CYCLE_LIVE.flatsJoined);
   const [filter, setFilter] = useState<'all' | 'paid' | 'pending'>('all');
   const [whatsappOpen, setWhatsappOpen] = useState(false);
+  const [sendOrderOpen, setSendOrderOpen] = useState(false);
+  const [orderSentLocked, setOrderSentLocked] = useState(false);
   const [extraOrders, setExtraOrders] = useState<typeof FLAT_ACTIVITY>([]);
 
   useEffect(() => {
@@ -70,7 +73,14 @@ export default function AdminPage() {
   const pendingCount = SOCIETY.totalFlats - societyFlats;
 
   return (
-    <div className="min-h-screen pb-12">
+    <div className="min-h-screen pb-20 md:pb-12">
+      {/* Mobile-only role switch strip */}
+      <a href="/app" className="md:hidden fixed bottom-0 left-0 right-0 h-12 bg-ink text-cream flex items-center justify-center gap-2 text-[11px] font-mono tracking-widest font-semibold z-30">
+        <span className="opacity-60">VIEWING AS RWA ADMIN</span>
+        <span className="opacity-40">·</span>
+        <span className="text-terra-light">SWITCH TO RESIDENT →</span>
+      </a>
+
       <div className="max-w-[1320px] mx-auto px-4 md:px-8 pt-6 md:pt-10">
         <div className="bg-cream rounded-2xl p-5 md:p-8 min-h-[800px]">
             {/* Header */}
@@ -96,10 +106,16 @@ export default function AdminPage() {
                 <button className="px-5 py-2.5 bg-transparent text-ink border-[1.5px] border-ink rounded-full text-xs font-bold tracking-wide hover:bg-ink hover:text-cream transition-colors">
                   Export weekly report
                 </button>
-                <button className="px-5 py-2.5 bg-terra text-cream rounded-full text-xs font-bold tracking-wide hover:bg-ink transition-colors"
-                        style={{ boxShadow: '0 8px 20px -8px rgba(199, 58, 31, 0.5)' }}>
-                  Send order to store →
-                </button>
+                {orderSentLocked ? (
+                  <button disabled className="px-5 py-2.5 bg-leaf/15 text-leaf border border-leaf/40 rounded-full text-xs font-bold tracking-wide cursor-default flex items-center gap-1.5">
+                    <span>✓</span> Order sent to store
+                  </button>
+                ) : (
+                  <button onClick={() => setSendOrderOpen(true)} className="px-5 py-2.5 bg-terra text-cream rounded-full text-xs font-bold tracking-wide hover:bg-ink transition-colors"
+                          style={{ boxShadow: '0 8px 20px -8px rgba(199, 58, 31, 0.5)' }}>
+                    Send order to store →
+                  </button>
+                )}
               </div>
             </div>
 
@@ -133,6 +149,14 @@ export default function AdminPage() {
         pendingFlats={pendingCount}
         onClose={() => setWhatsappOpen(false)}
         onSent={handleWhatsAppSent}
+      />
+
+      <SendOrderModal
+        open={sendOrderOpen}
+        flatsCount={societyFlats}
+        basketValue={basketValue}
+        onClose={() => setSendOrderOpen(false)}
+        onSent={() => setOrderSentLocked(true)}
       />
     </div>
   );
